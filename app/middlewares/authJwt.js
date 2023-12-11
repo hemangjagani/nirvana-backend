@@ -5,23 +5,26 @@ const User = db.user;
 const Role = db.role;
 
 verifyToken = (req, res, next) => {
-  let token = req.session.token;
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
+  if (!authHeader) {
     return res.status(403).send({ message: "No token provided!" });
   }
 
-  jwt.verify(token,
-            config.secret,
-            (err, decoded) => {
-              if (err) {
-                return res.status(401).send({
-                  message: "Unauthorized!",
-                });
-              }
-              req.userId = decoded.id;
-              next();
-            });
+  const tokenParts = authHeader.split(' ');
+  if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
+    return res.status(401).send({ message: "Invalid token format!" });
+  }
+
+  const token = tokenParts[1];
+
+  jwt.verify(token, config.secret, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "Unauthorized!" });
+    }
+    req.userId = decoded.id;
+    next();
+  });
 };
 
 isAdmin = (req, res, next) => {
@@ -40,7 +43,7 @@ isAdmin = (req, res, next) => {
           res.status(500).send({ message: err });
           return;
         }
-
+        
         for (let i = 0; i < roles.length; i++) {
           if (roles[i].name === "admin") {
             next();
