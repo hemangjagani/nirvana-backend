@@ -15,7 +15,7 @@ exports.userBoard = (req, res) => {
 };
 
 exports.adminBoard = (req, res) => {
-  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+  const token = req.headers.authorization && req.headers.authorization.split(" ")[1];
 
   if (!token) {
     return res.status(403).send({ message: "No token provided!" });
@@ -29,34 +29,92 @@ exports.adminBoard = (req, res) => {
     const currentUserID = decoded.id;
 
     // To send all user data from the "users" collection excluding the current user and password field
-    User.find({ _id: { $ne: currentUserID } }, { password: 0 }, (err, users) => {
-      if (err) {
-        return res.status(500).send({ message: err });
-      }
-      res.status(200).send(users);
-    });
+    User.find({ _id: { $ne: currentUserID } }, { password: 0 })
+      .populate({
+        path: "roles",
+        select: "name -_id", // Exclude the '_id' field from the Role model
+      })
+      .exec((err, users) => {
+        if (err) {
+          return res.status(500).send({ message: err });
+        }
+        res.status(200).send(users);
+      });
   });
 };
-
 exports.getUserById = async (req, res) => {
   try {
     const userId = req.params.id;
 
     // Fetch user from the database based on the provided ID
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId)
+      .select('-password')
+      .populate({
+        path: 'roles',
+        select: 'name -_id', // Exclude the _id field
+      })
+      .exec();
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Send the user data as the response (without the password)
     res.status(200).json(user);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
+exports.editUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { username, email, role } = req.body;
+
+    // Update user in the database based on the provided ID
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { username, email, role },
+      { new: true } // To return the updated document
+    )
+      .select('-password')
+      .populate({
+        path: 'roles',
+        select: 'name -_id', // Exclude the _id field
+      })
+      .exec();
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Delete user from the database based on the provided ID
+    const deletedUser = await User.findByIdAndDelete(userId);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 exports.moderatorBoard = (req, res) => {
   // You can add logic specific to moderator content here
@@ -97,3 +155,4 @@ exports.getAllResumes = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+

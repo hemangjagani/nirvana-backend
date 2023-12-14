@@ -20,6 +20,19 @@ module.exports = function(app) {
     controller.getUserById
   );
 
+  app.patch(
+    "/api/users/:id",
+    [authJwt.verifyToken, authJwt.isAdmin],
+    controller.editUser
+  );
+
+  app.delete(
+    "/api/users/:id",
+    [authJwt.verifyToken, authJwt.isAdmin],
+    controller.deleteUser
+  );
+
+
   app.get(
     "/api/test/mod",
     [authJwt.verifyToken, authJwt.isModerator],
@@ -31,6 +44,6 @@ module.exports = function(app) {
     controller.adminBoard
   );
 
-  
+
 };
 
