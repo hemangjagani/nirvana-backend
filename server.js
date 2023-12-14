@@ -7,13 +7,6 @@ const dbConfig = require("./app/config/db.config");
 const app = express();
 
 app.use(cors());
-/* for Angular Client (withCredentials) */
-// app.use(
-//   cors({
-//     credentials: true,
-//     origin: ["http://localhost:8081"],
-//   })
-// );
 
 // parse requests of content-type - application/json
 app.use(express.json());
@@ -23,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cookieSession({
-    name: "bezkoder-session",
+    name: "nirvana-session",
     keys: ["COOKIE_SECRET"], // should use as secret environment variable
     httpOnly: true
   })
@@ -51,9 +44,10 @@ db.mongoose
 
 // simple route
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to bezkoder application." });
+  res.json({ message: "Welcome to nirvana application." });
 });
-
+app.use("/public", express.static("app/public"));
+ 
 // routes
 require("./app/routes/auth.routes")(app);
 require("./app/routes/user.routes")(app);

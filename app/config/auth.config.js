@@ -1,3 +1,4 @@
 module.exports = {
-  secret: "bezkoder-secret-key"
+  secret: "nirvana
+-secret-key"
 };
