@@ -1,4 +1,3 @@
 module.exports = {
-  secret: "nirvana
--secret-key"
+  secret: "nirvana-secret-key"
 };
